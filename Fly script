@@ -1,0 +1,69 @@
+-- Create the ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "FlyGUI"
+screenGui.Parent = game.CoreGui
+
+-- Create the Frame for the GUI
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0.3, 0, 0.1, 0)
+frame.Position = UDim2.new(0.35, 0, 0.8, 0)
+frame.BackgroundTransparency = 0.5
+frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+frame.Parent = screenGui
+
+-- Create the Fly button
+local flyButton = Instance.new("TextButton")
+flyButton.Size = UDim2.new(1, 0, 1, 0)
+flyButton.Position = UDim2.new(0, 0, 0, 0)
+flyButton.Text = "Fly"
+flyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+flyButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+flyButton.Parent = frame
+
+-- Variables to manage the flying state
+local flying = false
+local speed = 50
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local rootPart = character:WaitForChild("HumanoidRootPart")
+
+-- Function to toggle flying
+local function toggleFly()
+    flying = not flying
+    if flying then
+        humanoid.PlatformStand = true -- Disables normal physics
+        flyButton.Text = "Stop Flying"
+        local bodyGyro = Instance.new("BodyGyro")
+        bodyGyro.CFrame = rootPart.CFrame
+        bodyGyro.Parent = rootPart
+        bodyGyro.MaxTorque = Vector3.new(400000, 400000, 400000)
+        bodyGyro.P = 3000
+        
+        local bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.Velocity = Vector3.new(0, 0.1, 0)
+        bodyVelocity.MaxForce = Vector3.new(100000, 100000, 100000)
+        bodyVelocity.Parent = rootPart
+        
+        local function flyLoop()
+            while flying do
+                bodyGyro.CFrame = workspace.CurrentCamera.CFrame
+                bodyVelocity.Velocity = workspace.CurrentCamera.CFrame.LookVector * speed
+                wait(0.1)
+            end
+            bodyGyro:Destroy()
+            bodyVelocity:Destroy()
+            humanoid.PlatformStand = false
+            flyButton.Text = "Fly"
+        end
+        flyLoop()
+    else
+        humanoid.PlatformStand = false
+    end
+end
+
+-- Connect the button to toggle flying
+flyButton.MouseButton1Click:Connect(toggleFly)
+
+-- Handle mobile touch input
+flyButton.TouchTap:Connect(toggleFly)
